@@ -1,15 +1,18 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Product } from "../lib/api";
+import { getProducts } from "../lib/api";
 import ProductCard from "./ProductCard";
 
-type ProductListProps = {
-  products: Product[];
-};
 type SortOption = "default" | "price-asc" | "price-desc";
 
-const ProductList = ({ products }: ProductListProps) => {
+const ProductList = () => {
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+    queryKey: ["products"],
+    queryFn: getProducts,
+    staleTime: 1000 * 60 * 5,
+  });
   const [search, setSearch] = useState("");
 
   const [category, setCategory] = useState("all");
@@ -24,11 +27,7 @@ const ProductList = ({ products }: ProductListProps) => {
   const sortDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    console.log("useEffect executed");
-
     const handleClickOutside = (event: MouseEvent) => {
-      console.log("document clicked");
-
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node)
@@ -50,6 +49,16 @@ const ProductList = ({ products }: ProductListProps) => {
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
+
+  if (isLoading) {
+    return <p>Loading...</p>;
+  }
+
+  if (isError) {
+    return <p>Failed to load products.</p>;
+  }
+
+  const products = data ?? [];
 
   const categories = [
     "all",
@@ -73,6 +82,13 @@ const ProductList = ({ products }: ProductListProps) => {
   return (
     <>
       <div className="mb-6 flex flex-col gap-4 md:flex-row ">
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isFetching ? "Refreshing..." : "Refresh Products"}
+        </button>
         <input
           type="text"
           value={search}
