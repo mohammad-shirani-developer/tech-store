@@ -6,7 +6,7 @@ type ProductCardProps = {
 
 const ProductCard = ({ title, price, imageUrl }: ProductCardProps) => {
   return (
-    <article className="flex flex-col items-center  gap-2 rounded-lg border border-gray-300 p-4 ">
+    <article className="flex flex-col items-center gap-2 rounded-lg border border-gray-300 p-4 ">
       {imageUrl && (
         <img
           src={imageUrl}
