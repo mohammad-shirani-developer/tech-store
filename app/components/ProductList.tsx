@@ -81,7 +81,7 @@ const ProductList = () => {
 
   return (
     <>
-      <div className="mb-6 flex flex-col gap-4 md:flex-row ">
+      <div className="mb-6 grid grid-cols-1 gap-4 ms:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ">
         <button
           type="button"
           onClick={() => refetch()}
@@ -94,10 +94,10 @@ const ProductList = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search products..."
-          className="w-full max-w-md  rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+          className="w-full   rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
         />
 
-        <div ref={dropdownRef} className="relative w-full max-w-md">
+        <div ref={dropdownRef} className="relative w-full ">
           <button
             type="button"
             onClick={() => {
@@ -129,7 +129,7 @@ const ProductList = () => {
           )}
         </div>
 
-        <div ref={sortDropdownRef} className="relative w-full max-w-md">
+        <div ref={sortDropdownRef} className="relative w-full ">
           <button
             type="button"
             onClick={() => {
@@ -191,7 +191,7 @@ const ProductList = () => {
           No products found.
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {sortedProducts.map((product) => (
             <ProductCard
               key={product.id}
