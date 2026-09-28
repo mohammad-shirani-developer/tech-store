@@ -24,3 +24,23 @@ export async function getProducts(): Promise<Product[]> {
     throw error;
   }
 }
+
+export async function getProductById(id: string): Promise<Product | null> {
+  const response = await fetch(`https://fakestoreapi.com/products/${id}`);
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return null;
+    }
+
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const text = await response.text();
+
+  if (!text.trim()) {
+    return null;
+  }
+
+  return JSON.parse(text);
+}
