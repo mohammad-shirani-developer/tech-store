@@ -10,6 +10,8 @@ type ProductDetailsPageProps = {
 
 const ProductDetailsPage = async ({ params }: ProductDetailsPageProps) => {
   const { id } = await params;
+  //   await new Promise((resolve) => setTimeout(resolve, 2000));
+
   const product = await getProductById(id);
   if (!product) {
     notFound();
