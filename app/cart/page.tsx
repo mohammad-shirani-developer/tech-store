@@ -11,7 +11,20 @@ const CartPage = () => {
     decreaseQuantity,
     removeFromCart,
     getCartTotal,
+    isHydrated,
   } = useCart();
+
+  if (!isHydrated) {
+    return (
+      <main className="mx-auto max-w-7xl px-4 py-8">
+        <h1 className="text-3xl font-bold">Shopping Cart</h1>
+
+        <div className="mt-12 flex items-center justify-center">
+          <p className="text-gray-500">Loading cart...</p>
+        </div>
+      </main>
+    );
+  }
 
   if (cart.length === 0) {
     return (

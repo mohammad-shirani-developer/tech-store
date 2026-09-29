@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useSyncExternalStore } from "react";
 import { Product } from "../lib/api";
 
 type CartItem = {
@@ -18,15 +18,103 @@ type CartContextType = {
   decreaseQuantity: (productId: number) => void;
   removeFromCart: (productId: number) => void;
   getCartTotal: () => number;
+  isHydrated: boolean;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const CART_KEY = "cart";
+
+/* -----------------------------
+   Cart Store
+----------------------------- */
+
+let cartSnapshot = "";
+let cartInitialized = false;
+
+const cartListeners = new Set<() => void>();
+
+const subscribeToCart = (listener: () => void) => {
+  cartListeners.add(listener);
+
+  return () => {
+    cartListeners.delete(listener);
+  };
+};
+
+const getCartSnapshot = () => {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  if (!cartInitialized) {
+    cartInitialized = true;
+    cartSnapshot = localStorage.getItem(CART_KEY) ?? "";
+  }
+
+  return cartSnapshot;
+};
+
+const getServerCartSnapshot = () => {
+  return "";
+};
+
+const updateCart = (newCart: CartItem[]) => {
+  const newSnapshot = JSON.stringify(newCart);
+
+  cartSnapshot = newSnapshot;
+
+  localStorage.setItem(CART_KEY, newSnapshot);
+
+  cartListeners.forEach((listener) => {
+    listener();
+  });
+};
+
+/* -----------------------------
+   Hydration Store
+----------------------------- */
+
+const emptySubscribe = () => () => {};
+
+const getClientHydrationSnapshot = () => {
+  return true;
+};
+
+const getServerHydrationSnapshot = () => {
+  return false;
+};
+
+/* -----------------------------
+   Cart Provider
+----------------------------- */
+
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const cartSnapshotValue = useSyncExternalStore(
+    subscribeToCart,
+    getCartSnapshot,
+    getServerCartSnapshot,
+  );
+
+  const isHydrated = useSyncExternalStore(
+    emptySubscribe,
+    getClientHydrationSnapshot,
+    getServerHydrationSnapshot,
+  );
+
+  let cart: CartItem[] = [];
+
+  if (cartSnapshotValue) {
+    try {
+      cart = JSON.parse(cartSnapshotValue) as CartItem[];
+    } catch {
+      cart = [];
+    }
+  }
 
   const addToCart = (product: Product) => {
     const existingItem = cart.find((item) => item.id === product.id);
+
     if (!existingItem) {
       const newItem: CartItem = {
         id: product.id,
@@ -36,42 +124,51 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         quantity: 1,
       };
 
-      setCart((currentCart) => [...currentCart, newItem]);
+      updateCart([...cart, newItem]);
+
+      return;
     }
 
-    if (existingItem) {
-      setCart((currentCart) =>
-        currentCart.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item,
-        ),
-      );
-    }
+    updateCart(
+      cart.map((item) =>
+        item.id === product.id
+          ? {
+              ...item,
+              quantity: item.quantity + 1,
+            }
+          : item,
+      ),
+    );
   };
 
   const increaseQuantity = (productId: number) => {
-    setCart((currentCart) =>
-      currentCart.map((item) =>
-        item.id === productId ? { ...item, quantity: item.quantity + 1 } : item,
+    updateCart(
+      cart.map((item) =>
+        item.id === productId
+          ? {
+              ...item,
+              quantity: item.quantity + 1,
+            }
+          : item,
       ),
     );
   };
 
   const decreaseQuantity = (productId: number) => {
-    setCart((currentCart) =>
-      currentCart.map((item) =>
+    updateCart(
+      cart.map((item) =>
         item.id === productId && item.quantity > 1
-          ? { ...item, quantity: item.quantity - 1 }
+          ? {
+              ...item,
+              quantity: item.quantity - 1,
+            }
           : item,
       ),
     );
   };
 
   const removeFromCart = (productId: number) => {
-    setCart((currentCart) =>
-      currentCart.filter((item) => item.id !== productId),
-    );
+    updateCart(cart.filter((item) => item.id !== productId));
   };
 
   const getCartTotal = () => {
@@ -87,12 +184,17 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         decreaseQuantity,
         removeFromCart,
         getCartTotal,
+        isHydrated,
       }}
     >
       {children}
     </CartContext.Provider>
   );
 };
+
+/* -----------------------------
+   useCart
+----------------------------- */
 
 export const useCart = () => {
   const context = useContext(CartContext);
