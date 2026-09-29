@@ -1,3 +1,4 @@
+import AddToCartButton from "@/app/components/AddToCartButton";
 import { getProductById } from "@/app/lib/api";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -33,13 +34,14 @@ const ProductDetailsPage = async ({ params }: ProductDetailsPageProps) => {
           <h1 className="text-2xl font-bold leading-tight md:text-3xl">
             {product.title}
           </h1>
-          <p className=" mt-6 text-2xl font-bold">
+          <p className=" mt-6 text-3xl font-bold">
             ${product.price.toFixed(2)}
           </p>
 
           <p className="mt-4  max-w-xl leading-7 text-gray-300">
             {product.description}
           </p>
+          <AddToCartButton product={product} />
 
           <p className="mt-6 text-sm text-gray-400">
             Category: {product.category}
