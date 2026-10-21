@@ -138,12 +138,12 @@ const CartPage = () => {
             </span>
           </div>
 
-          <button
-            type="button"
-            className="mt-6 w-full rounded-lg bg-blue-500 px-6 py-3 font-semibold text-white transition hover:bg-blue-600"
+          <Link
+            href="/checkout"
+            className="mt-6 block w-full rounded-lg bg-blue-500 px-6 py-3 text-center font-semibold text-white transition hover:bg-blue-600"
           >
             Checkout
-          </button>
+          </Link>
         </aside>
       </div>
     </main>

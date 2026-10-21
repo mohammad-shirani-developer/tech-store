@@ -71,6 +71,10 @@ const updateCart = (newCart: CartItem[]) => {
   });
 };
 
+export const clearCart = () => {
+  updateCart([]);
+};
+
 /* -----------------------------
    Hydration Store
 ----------------------------- */
