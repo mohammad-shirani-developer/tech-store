@@ -85,19 +85,25 @@ const CartPage = () => {
                 <button
                   type="button"
                   onClick={() => decreaseQuantity(item.id)}
-                  className="h-9 w-9 rounded border border-gray-700 transition hover:bg-gray-800"
+                  disabled={item.quantity <= 1}
+                  aria-label={`Decrease quantity of ${item.title}`}
+                  className="flex h-11 w-11 items-center justify-center rounded border border-gray-700 text-lg transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   -
                 </button>
 
-                <span className="min-w-6 text-center font-semibold">
+                <span
+                  className="min-w-6 text-center font-semibold"
+                  aria-live="polite"
+                >
                   {item.quantity}
                 </span>
 
                 <button
                   type="button"
                   onClick={() => increaseQuantity(item.id)}
-                  className="h-9 w-9 rounded border border-gray-700 transition hover:bg-gray-800"
+                  aria-label={`Increase quantity of ${item.title}`}
+                  className="flex h-11 w-11 items-center justify-center rounded border border-gray-700 text-lg transition hover:bg-gray-800"
                 >
                   +
                 </button>
@@ -112,6 +118,7 @@ const CartPage = () => {
                 <button
                   type="button"
                   onClick={() => removeFromCart(item.id)}
+                  aria-label={`Remove ${item.title} from cart`}
                   className="text-sm text-red-500 transition hover:text-red-400"
                 >
                   Remove
@@ -122,7 +129,7 @@ const CartPage = () => {
         </div>
 
         {/* Order Summary */}
-        <aside className="h-fit rounded-lg border border-gray-800 p-6">
+        <aside className="h-fit rounded-lg border border-gray-800 p-6 lg:sticky lg:top-24">
           <h2 className="text-xl font-bold">Order Summary</h2>
 
           <div className="mt-6 flex items-center justify-between text-gray-400">

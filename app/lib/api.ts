@@ -29,7 +29,30 @@ type DummyProductsResponse = {
   products: DummyProduct[];
 };
 
-function mapDummyProductToProduct(product: DummyProduct): Product {
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
+const requestJson = async <T>(url: string): Promise<T> => {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new ApiError(
+      `HTTP error! status: ${response.status}`,
+      response.status,
+    );
+  }
+
+  return (await response.json()) as T;
+};
+
+export const mapDummyProductToProduct = (product: DummyProduct): Product => {
   return {
     id: product.id,
     title: product.title,
@@ -42,17 +65,13 @@ function mapDummyProductToProduct(product: DummyProduct): Product {
       count: product.reviews?.length ?? 0,
     },
   };
-}
+};
 
 export async function getProducts(): Promise<Product[]> {
   try {
-    const response = await fetch("https://dummyjson.com/products");
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data: DummyProductsResponse = await response.json();
+    const data = await requestJson<DummyProductsResponse>(
+      "https://dummyjson.com/products",
+    );
 
     return data.products.map(mapDummyProductToProduct);
   } catch (error) {
@@ -62,17 +81,17 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 export async function getProductById(id: string): Promise<Product | null> {
-  const response = await fetch(`https://dummyjson.com/products/${id}`);
+  try {
+    const product = await requestJson<DummyProduct>(
+      `https://dummyjson.com/products/${id}`,
+    );
 
-  if (!response.ok) {
-    if (response.status === 404) {
+    return mapDummyProductToProduct(product);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
       return null;
     }
 
-    throw new Error(`HTTP error! status: ${response.status}`);
+    throw error;
   }
-
-  const product: DummyProduct = await response.json();
-
-  return mapDummyProductToProduct(product);
 }
