@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useSyncExternalStore } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { Product } from "../lib/api";
 
 type CartItem = {
@@ -13,12 +19,16 @@ type CartItem = {
 
 type CartContextType = {
   cart: CartItem[];
-  addToCart: (product: Product) => void;
+  addToCart: (product: Product, quantity?: number) => void;
   increaseQuantity: (productId: number) => void;
   decreaseQuantity: (productId: number) => void;
   removeFromCart: (productId: number) => void;
   getCartTotal: () => number;
   isHydrated: boolean;
+  /* Toast event for the last "added to cart" action, consumed by
+     <CartToast/>. Null when there is nothing to show. */
+  lastAdded: { title: string; at: number } | null;
+  dismissToast: () => void;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -106,6 +116,17 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     getServerHydrationSnapshot,
   );
 
+  /* Local toast state ("added to cart" notification). Kept here so the
+     toast fires from the same action that mutates the cart. */
+  const [lastAdded, setLastAdded] = useState<{
+    title: string;
+    at: number;
+  } | null>(null);
+
+  const dismissToast = useCallback(() => {
+    setLastAdded(null);
+  }, []);
+
   let cart: CartItem[] = [];
 
   if (cartSnapshotValue) {
@@ -116,7 +137,9 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
-  const addToCart = (product: Product) => {
+  // Optional quantity lets a single click add N units atomically
+  // (repeated same-tick calls would read the same stale snapshot).
+  const addToCart = (product: Product, quantity = 1) => {
     const existingItem = cart.find((item) => item.id === product.id);
 
     if (!existingItem) {
@@ -125,24 +148,26 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         title: product.title,
         price: product.price,
         image: product.image,
-        quantity: 1,
+        quantity,
       };
 
       updateCart([...cart, newItem]);
-
-      return;
+    } else {
+      updateCart(
+        cart.map((item) =>
+          item.id === product.id
+            ? {
+                ...item,
+                quantity: item.quantity + quantity,
+              }
+            : item,
+        ),
+      );
     }
 
-    updateCart(
-      cart.map((item) =>
-        item.id === product.id
-          ? {
-              ...item,
-              quantity: item.quantity + 1,
-            }
-          : item,
-      ),
-    );
+    // Toast event for <CartToast/>; `at` (timestamp) drives the
+    // auto-dismiss timer and re-arming when items are added in a row.
+    setLastAdded({ title: product.title, at: Date.now() });
   };
 
   const increaseQuantity = (productId: number) => {
@@ -189,6 +214,8 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         removeFromCart,
         getCartTotal,
         isHydrated,
+        lastAdded,
+        dismissToast,
       }}
     >
       {children}

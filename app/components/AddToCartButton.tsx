@@ -1,20 +1,29 @@
 "use client";
 
 import { useCart } from "../context/CartContext";
-import { Product } from "../lib/api";
+import type { Product } from "../lib/api";
 
 type AddToCartButtonProps = {
   product: Product;
+  className?: string;
 };
 
-const AddToCartButton = ({ product }: AddToCartButtonProps) => {
+const AddToCartButton = ({
+  product,
+  className = "",
+}: AddToCartButtonProps) => {
   const { addToCart } = useCart();
+
+  const isOutOfStock = product.stock <= 0;
+
   return (
     <button
+      type="button"
       onClick={() => addToCart(product)}
-      className="mt-6 w-full rounded-lg bg-blue-500 px-6 py-3 font-semibold text-white transition hover:bg-blue-600 active:scale-[0.98] md:w-fit"
+      disabled={isOutOfStock}
+      className={`w-full rounded-lg bg-blue-600 px-4 py-2 text-xs font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     >
-      Add to Cart
+      {isOutOfStock ? "Out of Stock" : "Add to Cart"}
     </button>
   );
 };

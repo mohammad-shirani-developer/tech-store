@@ -1,13 +1,15 @@
-import ProductList from "./components/ProductList";
+import HomeView from "./components/HomeView";
+import { pageContainerClasses } from "./components/ui/styles";
+import { getProducts } from "./lib/api";
 
+/* The catalog is fetched on the server so the hero and product cards are
+   server-rendered; TanStack Query picks it up as initialData. */
 export default async function Home() {
-  return (
-    <main>
-      <section className="mx-auto max-w-7xl px-4 py-8">
-        <h2 className="mb-4">Featured Products</h2>
+  const products = await getProducts();
 
-        <ProductList />
-      </section>
+  return (
+    <main className={pageContainerClasses}>
+      <HomeView products={products} />
     </main>
   );
 }

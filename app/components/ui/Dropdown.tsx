@@ -58,7 +58,7 @@ const Dropdown = <T extends string>({
         aria-controls={listboxId}
         aria-label={ariaLabel}
         onClick={() => setIsOpen((open) => !open)}
-        className={`flex w-full items-center justify-between gap-2 rounded-lg border border-gray-700 bg-gray-900 px-4 py-2.5 text-sm text-white transition hover:border-blue-500 ${focusRingClasses}`}
+        className={`flex w-full items-center justify-between gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition hover:border-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white ${focusRingClasses}`}
       >
         <span className="min-w-0 flex-1 truncate text-left">{label}</span>
 
@@ -81,7 +81,7 @@ const Dropdown = <T extends string>({
           id={listboxId}
           role="listbox"
           aria-labelledby={triggerId}
-          className={`absolute left-0 top-full z-20 mt-2 max-h-64 w-full rounded-lg border border-gray-700 bg-gray-900 p-1 shadow-lg ${scrollbarThinClasses}`}
+          className={`absolute left-0 top-full z-20 mt-2 max-h-64 w-full rounded-lg border border-gray-200 bg-white p-1 shadow-lg dark:border-gray-700 dark:bg-gray-900 ${scrollbarThinClasses}`}
         >
           {options.map((option) => {
             const isSelected = option.value === value;
@@ -97,7 +97,7 @@ const Dropdown = <T extends string>({
                   className={`w-full rounded-md px-4 py-2.5 text-left text-sm transition ${
                     isSelected
                       ? "bg-blue-600 text-white"
-                      : "text-gray-200 hover:bg-gray-800"
+                      : "text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
                   }`}
                 >
                   {option.label}

@@ -1,11 +1,14 @@
 "use client";
-const error = () => {
-  return (
-    <div>
-      <h2>Something went wrong!</h2>
-      <p>Failed to load products.</p>
-    </div>
-  );
+
+import ErrorState from "./components/ErrorState";
+
+type RootErrorProps = {
+  error: Error & { digest?: string };
+  reset: () => void;
 };
 
-export default error;
+const RootError = ({ reset }: RootErrorProps) => {
+  return <ErrorState onRetry={() => reset()} />;
+};
+
+export default RootError;
