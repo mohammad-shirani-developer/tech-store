@@ -1,17 +1,29 @@
 "use client";
 
-import { primaryButtonClasses } from "./ui/styles";
+import Link from "next/link";
+import {
+  primaryButtonClasses,
+  secondaryButtonClasses,
+} from "./ui/styles";
 
 type ErrorStateProps = {
   title?: string;
   message?: string;
   onRetry?: () => void;
+  /** True while the retry is in flight — disables the button and shows progress. */
+  retrying?: boolean;
+  /** When set, renders a secondary "Go to ..." link below the retry button. */
+  homeHref?: string;
+  homeLabel?: string;
 };
 
 const ErrorState = ({
   title = "Something went wrong!",
   message = "Failed to load data. Please try again.",
   onRetry,
+  retrying = false,
+  homeHref,
+  homeLabel = "Go to Home",
 }: ErrorStateProps) => {
   return (
     <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 text-center">
@@ -39,9 +51,29 @@ const ErrorState = ({
       <p className="text-gray-500 dark:text-gray-400">{message}</p>
 
       {onRetry && (
-        <button type="button" onClick={onRetry} className={primaryButtonClasses}>
-          Retry
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={onRetry}
+            disabled={retrying}
+            className={primaryButtonClasses}
+          >
+            {retrying ? "Retrying..." : "Try Again"}
+          </button>
+
+          {homeHref && (
+            <Link href={homeHref} className={secondaryButtonClasses}>
+              {homeLabel}
+            </Link>
+          )}
+
+          <p
+            className="h-5 text-sm text-gray-500 dark:text-gray-400"
+            aria-live="polite"
+          >
+            {retrying ? "Reconnecting..." : ""}
+          </p>
+        </>
       )}
     </div>
   );

@@ -59,7 +59,7 @@ const ProductList = ({ products: initialProducts }: ProductListProps) => {
   const searchParams = useSearchParams();
   const initialSearch = searchParams.get("q") ?? "";
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ["products"],
     queryFn: getProducts,
     initialData: initialProducts,
@@ -98,7 +98,7 @@ const ProductList = ({ products: initialProducts }: ProductListProps) => {
   }
 
   if (isError) {
-    return <ErrorState onRetry={() => refetch()} />;
+    return <ErrorState onRetry={() => refetch()} retrying={isFetching} />;
   }
 
   const priceRangeLabel = `${formatRangePrice(minPrice)} \u2013 ${formatRangePrice(maxPrice)}`;

@@ -37,7 +37,7 @@ type HomeViewProps = {
 };
 
 const HomeView = ({ products: initialProducts }: HomeViewProps) => {
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ["products"],
     queryFn: getProducts,
     initialData: initialProducts,
@@ -158,7 +158,7 @@ const HomeView = ({ products: initialProducts }: HomeViewProps) => {
             ))}
           </div>
         ) : isError ? (
-          <ErrorState onRetry={() => refetch()} />
+          <ErrorState onRetry={() => refetch()} retrying={isFetching} />
         ) : (
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {latestProducts.map((product) => (
