@@ -20,6 +20,7 @@ import {
   focusRingClasses,
   inputClasses,
   rangeInputClasses,
+  scrollbarThinClasses,
   secondaryButtonClasses,
 } from "./ui/styles";
 
@@ -132,10 +133,13 @@ const ProductList = ({ products: initialProducts }: ProductListProps) => {
           </svg>
         </button>
 
+        {/* Pinned under the sticky header on desktop; capped to the
+            viewport (header + breathing room) with its own thin scrollbar
+            so the tail of the brand list stays reachable. */}
         <div
           className={`${
             showFilters ? "block" : "hidden"
-          } space-y-6 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 lg:sticky lg:top-24 lg:block`}
+          } space-y-6 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 lg:sticky lg:top-24 lg:block lg:max-h-[calc(100vh_-_8rem)] ${scrollbarThinClasses}`}
         >
           {/* Sidebar header + Clear all */}
           <div className="flex items-center justify-between">
