@@ -48,7 +48,11 @@ const HomeView = ({ products: initialProducts }: HomeViewProps) => {
 
   const products = data ?? [];
 
-  const latestProducts = products.slice(0, LATEST_COUNT);
+  /* "Latest" = highest ids (DummyJSON ids grow with the catalog) — the raw
+     merge order is by category, which made this row all laptops. */
+  const latestProducts = [...products]
+    .sort((a, b) => b.id - a.id)
+    .slice(0, LATEST_COUNT);
 
   const heroProducts = pickHeroProducts(products);
 

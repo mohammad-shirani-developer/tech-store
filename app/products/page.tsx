@@ -1,9 +1,16 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 
 import ProductList from "../components/ProductList";
 import { ProductCardGridSkeleton } from "../components/ProductCardSkeleton";
 import { pageContainerClasses } from "../components/ui/styles";
 import { getProducts } from "../lib/api";
+
+export const metadata: Metadata = {
+  title: "All Products",
+  description:
+    "Browse every laptop, phone and gadget in the store — filter by brand, category and price.",
+};
 
 type ProductsPageProps = {
   searchParams: Promise<{ q?: string | string[] }>;

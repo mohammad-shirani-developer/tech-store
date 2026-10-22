@@ -31,7 +31,8 @@ export default function ProductError({ error, reset }: ProductErrorProps) {
     <ErrorState
       onRetry={handleRetry}
       retrying={isRetrying}
-      homeHref="/"
+      // From a failed product page, the listing is the natural way back.
+      homeHref="/products"
     />
   );
 }

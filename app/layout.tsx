@@ -18,7 +18,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TechStore",
+  title: {
+    default: "TechStore",
+    template: "%s | TechStore",
+  },
   description:
     "Your one stop tech store — gadgets, laptops, phones and more at the best prices.",
 };
