@@ -1,19 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
-import { ORDER_SESSION_KEY } from "../../lib/order";
+import {
+  clearPlacedOrder,
+  readPlacedOrder,
+  type PlacedOrder,
+  ORDER_SESSION_KEY,
+} from "../../lib/order";
+import { clearCart } from "../../context/CartContext";
 import {
   pageContainerClasses,
   primaryButtonClasses,
 } from "../../components/ui/styles";
-
-type PlacedOrder = {
-  number: string;
-  total: number;
-  name: string;
-};
 
 /* -----------------------------
    Session order store
@@ -38,7 +38,9 @@ const getClientOrderSnapshot = (): PlacedOrder | null => {
 
   if (raw !== cachedRawOrder) {
     cachedRawOrder = raw;
-    cachedOrder = raw ? (JSON.parse(raw) as PlacedOrder) : null;
+    // Structured validation: a corrupted payload reads as "no order"
+    // instead of crashing the snapshot getter.
+    cachedOrder = readPlacedOrder();
   }
 
   return cachedOrder;
@@ -58,6 +60,19 @@ const SuccessPage = () => {
     getClientOrderSnapshot,
     getServerOrderSnapshot,
   );
+
+  /* The cart is emptied once the confirmation is on screen (checkout no
+     longer clears it before navigating), and the session copy is dropped
+     when the user leaves so a stale order can never resurface on a later
+     visit. A refresh keeps the confirmation because sessionStorage
+     survives in-tab reloads. */
+  useEffect(() => {
+    clearCart();
+
+    return () => {
+      clearPlacedOrder();
+    };
+  }, []);
 
   return (
     <main className={pageContainerClasses}>

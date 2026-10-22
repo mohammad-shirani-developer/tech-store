@@ -39,7 +39,9 @@ type HomeViewProps = {
 const HomeView = ({ products: initialProducts }: HomeViewProps) => {
   const { data, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ["products"],
-    queryFn: getProducts,
+    // Forward TanStack's signal so unmounting/superseded queries actually
+    // cancel the five upstream category requests.
+    queryFn: ({ signal }) => getProducts(signal),
     initialData: initialProducts,
     staleTime: 1000 * 60 * 5,
   });

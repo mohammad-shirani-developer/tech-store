@@ -99,15 +99,37 @@ const CartPage = () => {
               key={item.id}
               className="flex flex-col gap-4 py-6 first:pt-0 sm:flex-row sm:items-center"
             >
-              {/* Product image */}
+              {/* Product image (empty-string images get a placeholder so
+                  next/image never sees an invalid src) */}
               <div className="relative h-24 w-24 shrink-0 self-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-800 sm:self-auto">
-                <Image
-                  src={item.image}
-                  alt={item.title}
-                  fill
-                  sizes="96px"
-                  className="object-contain p-1"
-                />
+                {item.image ? (
+                  <Image
+                    src={item.image}
+                    alt={item.title}
+                    fill
+                    sizes="96px"
+                    className="object-contain p-1"
+                  />
+                ) : (
+                  <div
+                    aria-hidden="true"
+                    className="flex h-full w-full items-center justify-center text-gray-400 dark:text-gray-500"
+                  >
+                    <svg
+                      className="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.8}
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d={CART_ICON}
+                      />
+                    </svg>
+                  </div>
+                )}
               </div>
 
               {/* Product info */}
@@ -143,8 +165,9 @@ const CartPage = () => {
                 <button
                   type="button"
                   onClick={() => increaseQuantity(item.id)}
+                  disabled={item.quantity >= item.stock}
                   aria-label={`Increase quantity of ${item.title}`}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 text-lg text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 text-lg text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                 >
                   +
                 </button>

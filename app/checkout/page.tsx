@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { clearCart, useCart } from "../context/CartContext";
+import { useCart } from "../context/CartContext";
 import {
   focusRingClasses,
   inputClasses,
@@ -14,7 +14,7 @@ import {
   pageContainerClasses,
   primaryButtonClasses,
 } from "../components/ui/styles";
-import { createOrderNumber, ORDER_SESSION_KEY } from "../lib/order";
+import { createOrderNumber, savePlacedOrder } from "../lib/order";
 import { getShippingCost } from "../lib/shipping";
 import {
   shippingFormSchema,
@@ -77,13 +77,20 @@ const CheckoutPage = () => {
     };
 
     try {
-      sessionStorage.setItem(ORDER_SESSION_KEY, JSON.stringify(order));
+      const saved = savePlacedOrder(order);
+
+      if (!saved) {
+        setSubmitError("Could not save your order. Please try again.");
+        return;
+      }
     } catch {
       setSubmitError("Could not save your order. Please try again.");
       return;
     }
 
-    clearCart();
+    // Navigate FIRST and let the confirmation page empty the cart: clearing
+    // before the App Router navigation committed used to flash the "Your
+    // cart is empty" state on slow transitions.
     router.push("/checkout/success");
   };
 

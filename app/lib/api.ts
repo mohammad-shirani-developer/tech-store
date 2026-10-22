@@ -102,9 +102,9 @@ const isRetryableError = (error: unknown) => {
  * Fetch JSON with a hard timeout and transient-failure retries (the same
  * strategy as the movie-explorer Cinemeta layer): network errors, timeouts
  * and 5xx responses are retried with backoff, while 4xx responses fail
- * immediately.
+ * immediately. An optional caller signal cancels the request without retries.
  */
-const requestJson = async <T>(url: string): Promise<T> => {
+const requestJson = async <T>(url: string, signal?: AbortSignal): Promise<T> => {
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
@@ -114,7 +114,9 @@ const requestJson = async <T>(url: string): Promise<T> => {
 
     try {
       const response = await fetch(url, {
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        signal: signal
+          ? AbortSignal.any([AbortSignal.timeout(REQUEST_TIMEOUT_MS), signal])
+          : AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
 
       if (!response.ok) {
@@ -126,6 +128,11 @@ const requestJson = async <T>(url: string): Promise<T> => {
 
       return (await response.json()) as T;
     } catch (error) {
+      // A caller-initiated cancellation is never retried.
+      if (signal?.aborted) {
+        throw error;
+      }
+
       lastError = error;
 
       if (!isRetryableError(error)) {
@@ -153,7 +160,7 @@ export const mapDummyProductToProduct = (
     image: product.images[0] ?? "",
     images: product.images,
     brand: product.brand ?? null,
-    rating: product.rating,
+    rating: product.rating ?? 0,
     reviewCount: product.reviews?.length ?? 0,
     discountPercentage: product.discountPercentage ?? 0,
     stock: product.stock ?? 0,
@@ -174,24 +181,45 @@ export const mapDummyProductToProduct = (
  * (in parallel) and merged — instead of pulling every DummyJSON product
  * (cosmetics, groceries, ...).
  */
-export async function getProducts(): Promise<Product[]> {
+export async function getProducts(signal?: AbortSignal): Promise<Product[]> {
   try {
-    const responses = await Promise.all(
+    /* allSettled: one flaky category must not wipe out the whole catalog —
+       the successful categories are still served (a total failure throws). */
+    const results = await Promise.allSettled(
       TECH_CATEGORIES.map((category) =>
         requestJson<DummyProductsResponse>(
           /* limit=0 returns every product of the category (DummyJSON
              would otherwise cap the response at its default page size). */
           `${API_BASE_URL}/products/category/${category}?limit=0`,
+          signal,
         ),
       ),
     );
+
+    const failed = results.filter(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
+    );
+
+    if (failed.length === TECH_CATEGORIES.length) {
+      throw failed[0].reason;
+    }
+
+    if (failed.length > 0) {
+      console.warn(
+        `getProducts: ${failed.length}/${TECH_CATEGORIES.length} categories failed, serving the rest`,
+      );
+    }
 
     /* Merge category results, deduplicating by id (Map keeps first
        occurrence, preserving TECH_CATEGORIES order). */
     const productsById = new Map<number, Product>();
 
-    for (const response of responses) {
-      for (const product of response.products) {
+    for (const result of results) {
+      if (result.status !== "fulfilled") {
+        continue;
+      }
+
+      for (const product of result.value.products) {
         if (!productsById.has(product.id)) {
           productsById.set(product.id, mapDummyProductToProduct(product));
         }
@@ -205,10 +233,14 @@ export async function getProducts(): Promise<Product[]> {
   }
 }
 
-export async function getProductById(id: string): Promise<Product | null> {
+export async function getProductById(
+  id: string,
+  signal?: AbortSignal,
+): Promise<Product | null> {
   try {
     const product = await requestJson<DummyProduct>(
-      `${API_BASE_URL}/products/${id}`,
+      `${API_BASE_URL}/products/${encodeURIComponent(id)}`,
+      signal,
     );
 
     const mapped = mapDummyProductToProduct(product);
