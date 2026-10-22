@@ -5,10 +5,12 @@ import { pageContainerClasses } from "./components/ui/styles";
 import { getProducts } from "./lib/api";
 
 export const metadata: Metadata = {
-  title: "Upgrade Your Tech Life",
+  /* absolute: Next 16.4 prerenders the root page without applying the root
+     layout's title template to it, so the suffix is written out here. */
+  title: { absolute: "Upgrade Your Tech Life | TechStore" },
   description:
     "Shop the latest laptops, phones and gadgets at the best prices.",
-};
+}
 
 /* The catalog changes rarely: cache the server payload for 5 minutes instead
    of firing five upstream category requests on every visitor's render. */

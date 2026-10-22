@@ -8,7 +8,8 @@ import {
 } from "../components/ui/styles";
 
 export const metadata: Metadata = {
-  title: "About | TechStore",
+  // The root layout template appends "| TechStore" already.
+  title: "About",
   description:
     "Learn more about TechStore — a demo storefront built with Next.js, TypeScript and Tailwind CSS, powered by the DummyJSON demo API.",
 };
