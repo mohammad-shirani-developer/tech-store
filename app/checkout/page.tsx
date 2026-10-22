@@ -14,8 +14,9 @@ import {
   pageContainerClasses,
   primaryButtonClasses,
 } from "../components/ui/styles";
+import { formatPrice } from "../lib/format";
 import { createOrderNumber, savePlacedOrder } from "../lib/order";
-import { getShippingCost } from "../lib/shipping";
+import { formatShipping, getShippingCost } from "../lib/shipping";
 import {
   shippingFormSchema,
   type ShippingFormValues,
@@ -293,7 +294,7 @@ const CheckoutPage = () => {
                 </span>
 
                 <span className="font-medium text-gray-900 dark:text-white">
-                  ${(item.price * item.quantity).toFixed(2)}
+                  {formatPrice(item.price * item.quantity)}
                 </span>
               </li>
             ))}
@@ -302,7 +303,7 @@ const CheckoutPage = () => {
           <div className="mt-6 space-y-3 border-t border-gray-200 pt-4 text-sm dark:border-gray-800">
             <div className="flex items-center justify-between text-gray-500 dark:text-gray-400">
               <span>Subtotal</span>
-              <span className="font-medium text-gray-900 dark:text-white">${subtotal.toFixed(2)}</span>
+              <span className="font-medium text-gray-900 dark:text-white">{formatPrice(subtotal)}</span>
             </div>
 
             <div className="flex items-center justify-between text-gray-500 dark:text-gray-400">
@@ -315,7 +316,7 @@ const CheckoutPage = () => {
                     : "text-gray-900 dark:text-white"
                 }`}
               >
-                {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
+                {formatShipping(shipping)}
               </span>
             </div>
           </div>
@@ -323,7 +324,7 @@ const CheckoutPage = () => {
           <div className="mt-4 flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-800">
             <span className="font-semibold text-gray-900 dark:text-white">Total</span>
 
-            <span className="text-xl font-bold text-gray-900 dark:text-white">${total.toFixed(2)}</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-white">{formatPrice(total)}</span>
           </div>
         </aside>
       </div>

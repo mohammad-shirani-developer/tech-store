@@ -1,27 +1,33 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { useCart } from "../context/CartContext";
+import { CLOSE_ICON } from "./ui/icons";
 import { focusRingClasses } from "./ui/styles";
 
 const CHECK_ICON =
   "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z";
-
-const CLOSE_ICON = "M6 18L18 6M6 6l12 12";
 
 const TOAST_DURATION_MS = 3000;
 
 /**
  * "Added to cart!" toast, fixed bottom-right. Renders only after the cart
  * has hydrated (isHydrated guard) and reacts to the lastAdded event stored
- * in CartContext — auto-dismissing ~3s after the most recent add.
+ * in CartContext — auto-dismissing ~3s after the most recent add, pausing
+ * while the user hovers it.
  */
 const CartToast = () => {
   const { lastAdded, dismissToast, isHydrated } = useCart();
 
+  /* Pause state is derived, not synced: the pause belongs to one specific
+     toast (its `at` timestamp), so a fresh add automatically un-pauses
+     without any setState-in-effect dance. */
+  const [pausedFor, setPausedFor] = useState<number | null>(null);
+  const isPaused = pausedFor !== null && lastAdded?.at === pausedFor;
+
   useEffect(() => {
-    if (!lastAdded) {
+    if (!lastAdded || isPaused) {
       return;
     }
 
@@ -30,7 +36,7 @@ const CartToast = () => {
     return () => {
       clearTimeout(timer);
     };
-  }, [lastAdded, dismissToast]);
+  }, [lastAdded, dismissToast, isPaused]);
 
   if (!isHydrated || !lastAdded) {
     return null;
@@ -40,6 +46,10 @@ const CartToast = () => {
     <div
       role="status"
       aria-live="polite"
+      onMouseEnter={() =>
+        setPausedFor(lastAdded ? lastAdded.at : null)
+      }
+      onMouseLeave={() => setPausedFor(null)}
       className="animate-toast-in fixed bottom-4 right-4 z-50 flex max-w-[calc(100vw-2rem)] items-start gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-800 dark:bg-gray-900 sm:bottom-6 sm:right-6"
     >
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-500/10 dark:text-green-400">

@@ -3,6 +3,8 @@
  * agree on fees and totals.
  */
 
+import { formatPrice } from "./format";
+
 export const FREE_SHIPPING_THRESHOLD = 100;
 export const SHIPPING_FEE = 9.99;
 
@@ -12,5 +14,5 @@ export const getShippingCost = (subtotal: number): number => {
 };
 
 export const formatShipping = (shipping: number): string => {
-  return shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`;
+  return shipping === 0 ? "Free" : formatPrice(shipping);
 };

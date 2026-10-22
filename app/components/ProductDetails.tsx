@@ -5,6 +5,8 @@ import { useRef, useState } from "react";
 
 import { useCart } from "../context/CartContext";
 import type { Product, ProductReview } from "../lib/api";
+import { formatPrice } from "../lib/format";
+import { FREE_SHIPPING_THRESHOLD } from "../lib/shipping";
 import Stars from "./ui/Stars";
 import {
   HEADSET_ICON,
@@ -52,7 +54,8 @@ type PerkProps = {
 const PERKS: PerkProps[] = [
   {
     label: "Free Shipping",
-    description: "On orders over $100",
+    // Derived from the real shipping rule so the badge can never lie.
+    description: `On orders over $${FREE_SHIPPING_THRESHOLD}`,
     iconPath: TRUCK_ICON,
   },
   {
@@ -299,12 +302,12 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <p className="text-3xl font-bold text-gray-900 dark:text-white">
-              ${product.price.toFixed(2)}
+              {formatPrice(product.price)}
             </p>
 
             {originalPrice !== null && (
               <p className="text-xl font-medium text-gray-400 line-through dark:text-gray-500">
-                ${originalPrice.toFixed(2)}
+                {formatPrice(originalPrice)}
               </p>
             )}
 
@@ -470,9 +473,9 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
             >
               {product.reviews && product.reviews.length > 0 ? (
                 <ul className="max-w-3xl space-y-4">
-                  {product.reviews.slice(0, 3).map((review) => (
+                  {product.reviews.slice(0, 3).map((review, index) => (
                     <ReviewItem
-                      key={`${review.reviewerName}-${review.date}`}
+                      key={`${review.reviewerName}-${review.date}-${index}`}
                       review={review}
                     />
                   ))}

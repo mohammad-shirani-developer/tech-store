@@ -35,10 +35,25 @@ const Dropdown = <T extends string>({
 }: DropdownProps<T>) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const triggerId = useId();
   const listboxId = useId();
 
   useOutsideClick(containerRef, () => setIsOpen(false));
+
+  /** Roving focus for the ArrowUp/ArrowDown/Home/End listbox keys. */
+  const focusOption = (index: number) => {
+    const clamped = Math.min(Math.max(index, 0), options.length - 1);
+    optionRefs.current[clamped]?.focus();
+  };
+
+  const selectOption = (option: DropdownOption<T>) => {
+    onChange(option.value);
+    setIsOpen(false);
+    // Returning focus to the trigger keeps keyboard users anchored.
+    triggerRef.current?.focus();
+  };
 
   return (
     <div
@@ -47,11 +62,49 @@ const Dropdown = <T extends string>({
       onKeyDown={(event) => {
         if (event.key === "Escape") {
           setIsOpen(false);
+          triggerRef.current?.focus();
+          return;
+        }
+
+        if (!isOpen) {
+          return;
+        }
+
+        const currentIndex = optionRefs.current.findIndex(
+          (element) => element === document.activeElement,
+        );
+
+        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+          event.preventDefault();
+
+          const delta = event.key === "ArrowDown" ? 1 : -1;
+          focusOption(
+            currentIndex === -1
+              ? delta === 1
+                ? 0
+                : options.length - 1
+              : currentIndex + delta,
+          );
+
+          return;
+        }
+
+        if (event.key === "Home") {
+          event.preventDefault();
+          focusOption(0);
+
+          return;
+        }
+
+        if (event.key === "End") {
+          event.preventDefault();
+          focusOption(options.length - 1);
         }
       }}
     >
       <button
         type="button"
+        ref={triggerRef}
         id={triggerId}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
@@ -83,17 +136,17 @@ const Dropdown = <T extends string>({
           aria-labelledby={triggerId}
           className={`absolute left-0 top-full z-20 mt-2 max-h-64 w-full rounded-lg border border-gray-200 bg-white p-1 shadow-lg dark:border-gray-700 dark:bg-gray-900 ${scrollbarThinClasses}`}
         >
-          {options.map((option) => {
+          {options.map((option, index) => {
             const isSelected = option.value === value;
 
             return (
               <li key={option.value} role="option" aria-selected={isSelected}>
                 <button
                   type="button"
-                  onClick={() => {
-                    onChange(option.value);
-                    setIsOpen(false);
+                  ref={(element) => {
+                    optionRefs.current[index] = element;
                   }}
+                  onClick={() => selectOption(option)}
                   className={`w-full rounded-md px-4 py-2.5 text-left text-sm transition ${
                     isSelected
                       ? "bg-blue-600 text-white"

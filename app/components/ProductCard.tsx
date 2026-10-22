@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { getCategoryDisplayName } from "../lib/categories";
 import type { Product } from "../lib/api";
+import { formatPrice } from "../lib/format";
 import AddToCartButton from "./AddToCartButton";
 import Stars from "./ui/Stars";
 import { focusRingClasses } from "./ui/styles";
@@ -89,7 +90,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
       </div>
 
       <div className="mt-2 text-lg font-bold text-gray-900 dark:text-white">
-        ${product.price.toFixed(2)}
+        {formatPrice(product.price)}
       </div>
 
       <AddToCartButton product={product} className="mt-3" />

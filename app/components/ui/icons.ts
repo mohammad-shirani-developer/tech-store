@@ -1,7 +1,7 @@
 /**
  * Shared inline-SVG icon paths (Heroicons-style 24px outlines) so the
- * Footer features and the product-details trust badges render the exact
- * same glyphs without duplicating path data.
+ * Footer features, product-details trust badges, cart and header render
+ * the exact same glyphs without duplicating path data.
  */
 
 export const TRUCK_ICON =
@@ -12,3 +12,11 @@ export const HEADSET_ICON =
 
 export const SHIELD_ICON =
   "M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z";
+
+export const CART_ICON =
+  "M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z";
+
+export const CLOSE_ICON = "M6 18L18 6M6 6l12 12";
+
+export const BOX_ICON =
+  "M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z";
