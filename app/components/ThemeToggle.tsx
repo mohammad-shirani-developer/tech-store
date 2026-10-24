@@ -5,6 +5,12 @@ import { useTheme } from "next-themes";
 /**
  * Theme switch button. Renders both icons and lets CSS pick the visible
  * one (no mounted-state flicker); clicking toggles by resolvedTheme.
+ *
+ * The aria-label is a static string on purpose: `resolvedTheme` is
+ * undefined during SSR and the server's first client render, so deriving
+ * the label from it produces two different HTML trees and triggers a
+ * hydration mismatch warning whenever the visitor's stored theme differs
+ * from the server default.
  */
 const ThemeToggle = () => {
   const { resolvedTheme, setTheme } = useTheme();
@@ -12,11 +18,7 @@ const ThemeToggle = () => {
   return (
     <button
       type="button"
-      aria-label={
-        resolvedTheme === "dark"
-          ? "Switch to light theme"
-          : "Switch to dark theme"
-      }
+      aria-label="Toggle theme"
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
       className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
     >
