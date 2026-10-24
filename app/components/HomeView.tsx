@@ -120,6 +120,7 @@ const HomeView = ({ products: initialProducts }: HomeViewProps) => {
                     src={heroProducts[0].image}
                     alt=""
                     fill
+                    priority
                     sizes="176px"
                     className="object-contain"
                   />
@@ -132,6 +133,7 @@ const HomeView = ({ products: initialProducts }: HomeViewProps) => {
                     src={heroProducts[1].image}
                     alt=""
                     fill
+                    priority
                     sizes="192px"
                     className="object-contain"
                   />
@@ -167,8 +169,8 @@ const HomeView = ({ products: initialProducts }: HomeViewProps) => {
           <ErrorState onRetry={() => refetch()} retrying={isFetching} />
         ) : (
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {latestProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {latestProducts.map((product, index) => (
+              <ProductCard key={product.id} product={product} priority={index < 4} />
             ))}
           </div>
         )}

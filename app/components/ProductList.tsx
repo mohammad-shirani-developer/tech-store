@@ -356,8 +356,8 @@ const ProductList = ({ products: initialProducts }: ProductListProps) => {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">
-            {sortedProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {sortedProducts.map((product, index) => (
+              <ProductCard key={product.id} product={product} priority={index < 4} />
             ))}
           </div>
         )}

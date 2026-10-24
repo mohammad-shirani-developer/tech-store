@@ -16,9 +16,15 @@ const HEART_ICON =
 
 type ProductCardProps = {
   product: Product;
+  /**
+   * Pass true for the cards that sit above the fold so their images
+   * preload eagerly instead of lazy-loading (kills the LCP warning and
+   * improves the Largest Contentful Paint score).
+   */
+  priority?: boolean;
 };
 
-const ProductCard = ({ product }: ProductCardProps) => {
+const ProductCard = ({ product, priority = false }: ProductCardProps) => {
   /* Visual-only wishlist toggle (mockup detail; no persisted data). */
   const [isWishlisted, setIsWishlisted] = useState(false);
 
@@ -31,13 +37,14 @@ const ProductCard = ({ product }: ProductCardProps) => {
         <Link
           href={`/products/${product.id}`}
           aria-label={product.title}
-          className="block aspect-square overflow-hidden rounded-lg bg-gray-50 dark:bg-white/5"
+          className="relative block aspect-square overflow-hidden rounded-lg bg-gray-50 dark:bg-white/5"
         >
           {product.image && (
             <Image
               src={product.image}
               alt={product.title}
               fill
+              priority={priority}
               sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 640px) 50vw, 50vw"
               className="object-contain p-2 transition-transform duration-300 group-hover:scale-105"
             />
