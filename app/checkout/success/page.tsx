@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   clearPlacedOrder,
   readPlacedOrder,
   type PlacedOrder,
-  ORDER_SESSION_KEY,
 } from "../../lib/order";
 import { clearCart } from "../../context/CartContext";
 import { useLocationSearch } from "../../hooks/useLocationSearch";
@@ -18,50 +17,23 @@ import {
 } from "../../components/ui/styles";
 
 /* -----------------------------
-   Session order store
------------------------------ */
-
-const subscribeToOrder = () => {
-  // sessionStorage does not change while this page is open.
-  return () => {};
-};
-
-let cachedRawOrder: string | null = null;
-let cachedOrder: PlacedOrder | null = null;
-
-const getClientOrderSnapshot = (): PlacedOrder | null => {
-  let raw: string | null = null;
-
-  try {
-    raw = sessionStorage.getItem(ORDER_SESSION_KEY);
-  } catch {
-    raw = null;
-  }
-
-  if (raw !== cachedRawOrder) {
-    cachedRawOrder = raw;
-    // Structured validation: a corrupted payload reads as "no order"
-    // instead of crashing the snapshot getter.
-    cachedOrder = readPlacedOrder();
-  }
-
-  return cachedOrder;
-};
-
-const getServerOrderSnapshot = (): PlacedOrder | null => {
-  return null;
-};
-
-/* -----------------------------
    Success page
 ----------------------------- */
 
+/* Stripe sessions already processed in this tab: a Back/forward remount
+   replays the same ?session_id, and replaying it must never wipe a cart
+   the customer rebuilt after that order. */
+let lastClearedSessionId: string | null = null;
+
 const SuccessPage = () => {
-  const order = useSyncExternalStore(
-    subscribeToOrder,
-    getClientOrderSnapshot,
-    getServerOrderSnapshot,
+  /* Read once at mount and render from that snapshot: the confirmation
+     must not vanish when the session copy is cleared below, and a later
+     Back-navigation remount (session already emptied) correctly shows the
+     generic thanks page without touching any cart built since. */
+  const [orderSnapshot] = useState<PlacedOrder | null>(() =>
+    readPlacedOrder(),
   );
+  const cartClearedRef = useRef(false);
 
   /* Derived from the URL (no setState-in-effect): ?session_id=... means the
      customer is returning from a real Stripe Checkout test session. The
@@ -70,14 +42,40 @@ const SuccessPage = () => {
   const paidViaStripe =
     new URLSearchParams(search).get("session_id") !== null;
 
-  /* The cart is emptied once the confirmation is on screen (checkout no
-     longer clears it before navigating), and the session copy is dropped
-     when the user leaves so a stale order can never resurface on a later
-     visit. A refresh keeps the confirmation because sessionStorage
-     survives in-tab reloads. */
+  /* The cart is emptied only when this mount IS the arrival from checkout:
+     either a just-placed order snapshot exists (demo path) or the URL
+     carries a Stripe session id. Back/forward remounts later in the same
+     tab do not qualify — a cart built since the order must survive. */
   useEffect(() => {
-    clearCart();
+    const sessionId = new URLSearchParams(window.location.search).get(
+      "session_id",
+    );
 
+    const isArrival =
+      Boolean(orderSnapshot) || Boolean(sessionId);
+
+    if (!isArrival || cartClearedRef.current) {
+      return;
+    }
+
+    if (sessionId && lastClearedSessionId === sessionId) {
+      cartClearedRef.current = true;
+      return;
+    }
+
+    cartClearedRef.current = true;
+
+    if (sessionId) {
+      lastClearedSessionId = sessionId;
+    }
+
+    clearCart();
+    clearPlacedOrder();
+  }, [orderSnapshot]);
+
+  /* The session copy is dropped on unmount so a stale order can never
+     resurface on a later visit to this URL. */
+  useEffect(() => {
     return () => {
       clearPlacedOrder();
     };
@@ -105,7 +103,7 @@ const SuccessPage = () => {
         </div>
 
         <h1 className="mt-6 text-3xl font-bold text-gray-900 dark:text-white">
-          Thank you{order ? `, ${order.name}` : ""}!
+          Thank you{orderSnapshot ? `, ${orderSnapshot.name}` : ""}!
         </h1>
 
         <p className="mt-3 text-gray-500 dark:text-gray-400">
@@ -126,16 +124,16 @@ const SuccessPage = () => {
           </p>
         )}
 
-        {order && (
+        {orderSnapshot && (
           <dl className="mt-6 space-y-3 rounded-lg border border-gray-200 p-4 text-left text-sm dark:border-gray-800">
             <div className="flex items-center justify-between">
               <dt className="text-gray-500 dark:text-gray-400">Order number</dt>
-              <dd className="font-semibold text-gray-900 dark:text-white">{order.number}</dd>
+              <dd className="font-semibold text-gray-900 dark:text-white">{orderSnapshot.number}</dd>
             </div>
 
             <div className="flex items-center justify-between">
               <dt className="text-gray-500 dark:text-gray-400">Total</dt>
-              <dd className="font-semibold text-gray-900 dark:text-white">{formatPrice(order.total)}</dd>
+              <dd className="font-semibold text-gray-900 dark:text-white">{formatPrice(orderSnapshot.total)}</dd>
             </div>
           </dl>
         )}

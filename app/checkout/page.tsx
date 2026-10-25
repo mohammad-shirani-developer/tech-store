@@ -391,9 +391,11 @@ const CheckoutPage = () => {
             >
               {isSubmitting
                 ? "Placing order..."
-                : stripeEnabled
-                  ? "Pay with card"
-                  : "Place Order"}
+                : stripeEnabled === null
+                  ? "Continue to payment"
+                  : stripeEnabled
+                    ? "Pay with card"
+                    : "Place Order"}
             </button>
 
             {stripeEnabled === false && (

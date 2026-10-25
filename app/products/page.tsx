@@ -6,6 +6,10 @@ import { ProductCardGridSkeleton } from "../components/ProductCardSkeleton";
 import { pageContainerClasses } from "../components/ui/styles";
 import { getProducts } from "../lib/api";
 
+/* ISR: the catalog refreshes at most every 5 minutes instead of firing
+   upstream DummyJSON requests on every visit. */
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: "All Products",
   description:

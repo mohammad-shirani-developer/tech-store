@@ -5,7 +5,10 @@ export const shippingFormSchema = z.object({
     .string()
     .trim()
     .min(3, "Full name must be at least 3 characters"),
-  email: z.string().trim().email("Please enter a valid email address"),
+  email: z
+    .string()
+    .trim()
+    .pipe(z.email("Please enter a valid email address")),
   phone: z
     .string()
     .trim()

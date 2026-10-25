@@ -40,6 +40,7 @@ const parseCartItems = (raw: string): CartItem[] => {
   }
 
   const items: CartItem[] = [];
+  const seenIds = new Set<number>();
 
   for (const entry of parsed) {
     if (
@@ -52,6 +53,14 @@ const parseCartItems = (raw: string): CartItem[] => {
       (entry as CartItem).quantity >= 1
     ) {
       const item = entry as CartItem;
+
+      /* Hand-corrupted storage can hold the same id twice — that would
+         render duplicate rows and double-count the totals. */
+      if (seenIds.has(item.id)) {
+        continue;
+      }
+
+      seenIds.add(item.id);
 
       items.push({
         ...item,
@@ -95,6 +104,28 @@ let cartInitialized = false;
 
 const cartListeners = new Set<() => void>();
 
+/* Cross-tab sync: the "storage" event fires in every tab except the
+   writer — refresh the snapshot so a second tab shows the real cart
+   instead of silently overwriting the first tab's items with its own
+   stale view on its next mutation. */
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (event) => {
+    if (event.key !== CART_KEY && event.key !== null) {
+      return;
+    }
+
+    try {
+      cartSnapshot = window.localStorage.getItem(CART_KEY) ?? "";
+    } catch {
+      cartSnapshot = "";
+    }
+
+    cartListeners.forEach((listener) => {
+      listener();
+    });
+  });
+}
+
 const subscribeToCart = (listener: () => void) => {
   cartListeners.add(listener);
 
@@ -110,7 +141,14 @@ const getCartSnapshot = () => {
 
   if (!cartInitialized) {
     cartInitialized = true;
-    cartSnapshot = localStorage.getItem(CART_KEY) ?? "";
+
+    try {
+      cartSnapshot = localStorage.getItem(CART_KEY) ?? "";
+    } catch {
+      /* Storage blocked (strict privacy modes): degrade to an empty cart
+         instead of crashing the render tree. */
+      cartSnapshot = "";
+    }
   }
 
   return cartSnapshot;
@@ -125,7 +163,14 @@ const updateCart = (newCart: CartItem[]) => {
 
   cartSnapshot = newSnapshot;
 
-  localStorage.setItem(CART_KEY, newSnapshot);
+  try {
+    localStorage.setItem(CART_KEY, newSnapshot);
+  } catch {
+    /* Persistence failure (private mode / quota): the in-memory cart and
+       the UI stay consistent for this session, the cart just will not
+       survive a reload. Committing the snapshot before the try block
+       keeps listeners and state in sync either way. */
+  }
 
   cartListeners.forEach((listener) => {
     listener();
@@ -191,32 +236,42 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (existingItem) {
       // Never order more units than the store actually has in stock.
+      const nextQuantity = Math.min(
+        existingItem.quantity + quantity,
+        existingItem.stock,
+      );
+
       updateCart(
         cart.map((item) =>
           item.id === product.id
-            ? {
-                ...item,
-                quantity: Math.min(item.quantity + quantity, item.stock),
-              }
+            ? { ...item, quantity: nextQuantity }
             : item,
         ),
       );
-    } else {
-      if (product.stock <= 0) {
-        return;
+
+      /* The toast must not lie: re-adding a line already at its stock
+         cap changes nothing, so there is nothing to celebrate. */
+      if (nextQuantity > existingItem.quantity) {
+        setLastAdded({ title: product.title, at: Date.now() });
       }
 
-      const newItem: CartItem = {
-        id: product.id,
-        title: product.title,
-        price: product.price,
-        image: product.image,
-        quantity: Math.min(quantity, product.stock),
-        stock: product.stock,
-      };
-
-      updateCart([...cart, newItem]);
+      return;
     }
+
+    if (product.stock <= 0) {
+      return;
+    }
+
+    const newItem: CartItem = {
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      image: product.image,
+      quantity: Math.min(quantity, product.stock),
+      stock: product.stock,
+    };
+
+    updateCart([...cart, newItem]);
 
     // Toast event for <CartToast/>; `at` (timestamp) drives the
     // auto-dismiss timer and re-arming when items are added in a row.

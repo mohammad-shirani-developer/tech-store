@@ -18,6 +18,12 @@ const pickHeroProducts = (products: Product[]): Product[] => {
   const seenCategories = new Set<string>();
 
   for (const product of products) {
+    if (!product.image) {
+      // next/image throws on an empty src — never let imageless products
+      // reach the hero collage (the rest of the app guards this too).
+      continue;
+    }
+
     if (!seenCategories.has(product.category)) {
       seenCategories.add(product.category);
       picked.push(product);

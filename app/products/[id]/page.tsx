@@ -10,6 +10,10 @@ type ProductDetailsPageProps = {
   }>;
 };
 
+/* ISR: the product data refreshes at most every 5 minutes instead of
+   firing upstream DummyJSON requests on every visit. */
+export const revalidate = 300;
+
 /* Product pages are the money pages for SEO/sharing: title, storyline and
    the product photo go into the metadata (same fetch is request-memoized
    with the page render, so nothing extra hits the API). */
